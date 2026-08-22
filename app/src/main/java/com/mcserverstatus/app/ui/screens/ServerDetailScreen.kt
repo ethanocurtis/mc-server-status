@@ -105,13 +105,21 @@ fun ServerDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text("${state.entry.host}:${state.entry.port}", style = MaterialTheme.typography.bodyLarge)
+                Text(state.entry.addressLabel, style = MaterialTheme.typography.bodyLarge)
                 IconButton(onClick = {
-                    clipboard.setText(AnnotatedString("${state.entry.host}:${state.entry.port}"))
+                    clipboard.setText(AnnotatedString(state.entry.addressLabel))
                     Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
                 }) {
                     Icon(Icons.Filled.ContentCopy, contentDescription = "Copy address", modifier = Modifier.size(18.dp))
                 }
+            }
+
+            loaded?.resolvedVia?.let { srv ->
+                Text(
+                    "Resolved via SRV to ${srv.target}:${srv.port}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             AssistChip(

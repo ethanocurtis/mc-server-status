@@ -78,7 +78,7 @@ fun ServerCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${state.entry.host}:${state.entry.port}",
+                    text = state.entry.addressLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

@@ -90,7 +90,7 @@ class MainViewModel(
         }
     }
 
-    fun addServer(name: String, host: String, port: Int, edition: ServerEdition) {
+    fun addServer(name: String, host: String, port: Int?, edition: ServerEdition) {
         viewModelScope.launch {
             serverRepository.add(ServerEntry(name = name, host = host, port = port, edition = edition))
         }

@@ -18,6 +18,8 @@ data class ServerStatusResult(
     val faviconBase64: String? = null,
     val gamemode: String? = null,
     val errorMessage: String? = null,
+    /** Set when the server's port was auto-detected via a DNS SRV record, and it redirected somewhere else. */
+    val resolvedVia: SrvRecord? = null,
 ) {
     companion object {
         fun failure(message: String): ServerStatusResult =

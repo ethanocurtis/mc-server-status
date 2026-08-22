@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -30,20 +29,20 @@ import com.mcserverstatus.app.data.ServerEntry
 fun AddEditServerDialog(
     existing: ServerEntry?,
     onDismiss: () -> Unit,
-    onSave: (name: String, host: String, port: Int, edition: ServerEdition) -> Unit,
+    onSave: (name: String, host: String, port: Int?, edition: ServerEdition) -> Unit,
 ) {
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var host by remember { mutableStateOf(existing?.host ?: "") }
     var edition by remember { mutableStateOf(existing?.edition ?: ServerEdition.JAVA) }
-    var port by remember {
-        mutableStateOf((existing?.port ?: ServerEntry.DEFAULT_JAVA_PORT).toString())
-    }
-    var portTouched by remember { mutableStateOf(existing != null) }
+    var port by remember { mutableStateOf(existing?.port?.toString() ?: "") }
     var hostError by remember { mutableStateOf(false) }
     var portError by remember { mutableStateOf(false) }
 
-    fun defaultPortFor(e: ServerEdition) =
-        if (e == ServerEdition.BEDROCK) ServerEntry.DEFAULT_BEDROCK_PORT else ServerEntry.DEFAULT_JAVA_PORT
+    val portHint = if (edition == ServerEdition.BEDROCK) {
+        "Optional - defaults to ${ServerEntry.DEFAULT_BEDROCK_PORT}"
+    } else {
+        "Optional - auto-detected (SRV), or ${ServerEntry.DEFAULT_JAVA_PORT}"
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -53,18 +52,12 @@ fun AddEditServerDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = edition == ServerEdition.JAVA,
-                        onClick = {
-                            edition = ServerEdition.JAVA
-                            if (!portTouched) port = defaultPortFor(ServerEdition.JAVA).toString()
-                        },
+                        onClick = { edition = ServerEdition.JAVA },
                         label = { Text("Java") },
                     )
                     FilterChip(
                         selected = edition == ServerEdition.BEDROCK,
-                        onClick = {
-                            edition = ServerEdition.BEDROCK
-                            if (!portTouched) port = defaultPortFor(ServerEdition.BEDROCK).toString()
-                        },
+                        onClick = { edition = ServerEdition.BEDROCK },
                         label = { Text("Bedrock") },
                     )
                 }
@@ -87,11 +80,11 @@ fun AddEditServerDialog(
                 )
                 OutlinedTextField(
                     value = port,
-                    onValueChange = { port = it.filter(Char::isDigit); portTouched = true; portError = false },
+                    onValueChange = { port = it.filter(Char::isDigit); portError = false },
                     label = { Text("Port") },
                     singleLine = true,
                     isError = portError,
-                    supportingText = { if (portError) Text("Enter a port between 1 and 65535") },
+                    supportingText = { Text(if (portError) "Enter a port between 1 and 65535, or leave it blank" else portHint) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -100,11 +93,12 @@ fun AddEditServerDialog(
         confirmButton = {
             TextButton(onClick = {
                 val trimmedHost = host.trim()
-                val portValue = port.toIntOrNull()
+                val trimmedPort = port.trim()
+                val portValue = trimmedPort.toIntOrNull()
                 hostError = trimmedHost.isEmpty()
-                portError = portValue == null || portValue !in 1..65535
+                portError = trimmedPort.isNotEmpty() && (portValue == null || portValue !in 1..65535)
                 if (!hostError && !portError) {
-                    onSave(name.trim(), trimmedHost, portValue!!, edition)
+                    onSave(name.trim(), trimmedHost, portValue, edition)
                 }
             }) {
                 Text(if (existing == null) "Add" else "Save")
