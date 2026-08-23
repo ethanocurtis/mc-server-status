@@ -22,6 +22,13 @@ data class ServerEntry(
      */
     val port: Int?,
     val edition: ServerEdition,
+    /** Whether the background status-check worker should notify on an online/offline flip. */
+    val notifyOnStatusChange: Boolean = false,
+    /**
+     * Last online/offline state observed by the background worker, used to detect a *change*
+     * rather than notifying on every check. Null until the worker has checked this server once.
+     */
+    val lastKnownOnline: Boolean? = null,
 ) {
     /** Display name: the user's nickname if set, otherwise the host. */
     val displayName: String get() = name.ifBlank { host }

@@ -1,16 +1,23 @@
 package com.mcserverstatus.app.ui.components
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,9 +26,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.mcserverstatus.app.data.ServerEdition
 import com.mcserverstatus.app.data.ServerEntry
 import com.mcserverstatus.app.network.EditionDetector
@@ -44,7 +54,7 @@ private fun EditionChoice.toServerEdition(): ServerEdition? = when (this) {
 fun AddEditServerDialog(
     existing: ServerEntry?,
     onDismiss: () -> Unit,
-    onSave: (name: String, host: String, port: Int?, edition: ServerEdition) -> Unit,
+    onSave: (name: String, host: String, port: Int?, edition: ServerEdition, notifyOnStatusChange: Boolean) -> Unit,
 ) {
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var host by remember { mutableStateOf(existing?.host ?: "") }
@@ -58,11 +68,16 @@ fun AddEditServerDialog(
         )
     }
     var port by remember { mutableStateOf(existing?.port?.toString() ?: "") }
+    var notifyOnStatusChange by remember { mutableStateOf(existing?.notifyOnStatusChange ?: false) }
     var hostError by remember { mutableStateOf(false) }
     var portError by remember { mutableStateOf(false) }
     var detecting by remember { mutableStateOf(false) }
     var detectFailed by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* if denied, NotificationHelper simply no-ops when it can't post - nothing to handle here */ }
 
     val portHint = when (editionChoice) {
         EditionChoice.BEDROCK -> "Optional - defaults to ${ServerEntry.DEFAULT_BEDROCK_PORT}"
@@ -126,6 +141,31 @@ fun AddEditServerDialog(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Notify on status change", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Alerts you when this server goes offline or comes back online",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = notifyOnStatusChange,
+                        onCheckedChange = { checked ->
+                            notifyOnStatusChange = checked
+                            if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val granted = ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS,
+                                ) == PackageManager.PERMISSION_GRANTED
+                                if (!granted) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            }
+                        },
+                    )
+                }
             }
         },
         confirmButton = {
@@ -141,7 +181,7 @@ fun AddEditServerDialog(
 
                     val chosenEdition = editionChoice.toServerEdition()
                     if (chosenEdition != null) {
-                        onSave(name.trim(), trimmedHost, portValue, chosenEdition)
+                        onSave(name.trim(), trimmedHost, portValue, chosenEdition, notifyOnStatusChange)
                     } else {
                         detecting = true
                         detectFailed = false
@@ -149,7 +189,7 @@ fun AddEditServerDialog(
                             val detected = EditionDetector.detect(trimmedHost, portValue)
                             detecting = false
                             if (detected != null) {
-                                onSave(name.trim(), trimmedHost, portValue, detected)
+                                onSave(name.trim(), trimmedHost, portValue, detected, notifyOnStatusChange)
                             } else {
                                 detectFailed = true
                             }

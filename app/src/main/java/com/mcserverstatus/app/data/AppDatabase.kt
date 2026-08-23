@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [ServerEntry::class], version = 2, exportSchema = false)
+@Database(entities = [ServerEntry::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun serverDao(): ServerDao
@@ -39,13 +39,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v2 -> v3: adds the two columns backing per-server status-change notifications. Plain
+         * additive columns, so a simple ALTER TABLE suffices (no table rebuild needed here). */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE servers ADD COLUMN notifyOnStatusChange INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownOnline INTEGER DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mc-server-status.db",
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
         }
     }

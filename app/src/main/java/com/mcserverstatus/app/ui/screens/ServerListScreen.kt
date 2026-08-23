@@ -162,16 +162,24 @@ fun ServerListScreen(
         DialogMode.Add -> AddEditServerDialog(
             existing = null,
             onDismiss = { dialogMode = null },
-            onSave = { name, host, port, edition ->
-                viewModel.addServer(name, host, port, edition)
+            onSave = { name, host, port, edition, notifyOnStatusChange ->
+                viewModel.addServer(name, host, port, edition, notifyOnStatusChange)
                 dialogMode = null
             },
         )
         is DialogMode.Edit -> AddEditServerDialog(
             existing = mode.entry,
             onDismiss = { dialogMode = null },
-            onSave = { name, host, port, edition ->
-                viewModel.updateServer(mode.entry.copy(name = name, host = host, port = port, edition = edition))
+            onSave = { name, host, port, edition, notifyOnStatusChange ->
+                viewModel.updateServer(
+                    mode.entry.copy(
+                        name = name,
+                        host = host,
+                        port = port,
+                        edition = edition,
+                        notifyOnStatusChange = notifyOnStatusChange,
+                    ),
+                )
                 dialogMode = null
             },
         )
