@@ -31,6 +31,18 @@ data class ServerEntry(
     val lastKnownOnline: Boolean? = null,
     /** At most one server is favorited at a time - it's the one the home screen widget shows. */
     val isFavorite: Boolean = false,
+    /**
+     * A cached snapshot of the favorite's last real ping result, so the widget has something
+     * to show without pinging on every render. Populated only for the favorited server (by
+     * [com.mcserverstatus.app.widget.WidgetUpdater]); null on every other row, and null on the
+     * favorite itself until it's been checked once, or whenever it's currently offline.
+     */
+    val lastCheckedAt: Long? = null,
+    val lastKnownPlayersOnline: Int? = null,
+    val lastKnownPlayersMax: Int? = null,
+    val lastKnownLatencyMs: Long? = null,
+    val lastKnownMotd: String? = null,
+    val lastKnownFaviconBase64: String? = null,
 ) {
     /** Display name: the user's nickname if set, otherwise the host. */
     val displayName: String get() = name.ifBlank { host }

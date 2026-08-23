@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [ServerEntry::class], version = 4, exportSchema = false)
+@Database(entities = [ServerEntry::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun serverDao(): ServerDao
@@ -55,13 +55,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v4 -> v5: adds a cached snapshot of the favorite server's last ping result, so the
+         * widget has real content (players, ping, MOTD, favicon) instead of just online/offline. */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastCheckedAt INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownPlayersOnline INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownPlayersMax INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownLatencyMs INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownMotd TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN lastKnownFaviconBase64 TEXT DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mc-server-status.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
             }
         }
     }

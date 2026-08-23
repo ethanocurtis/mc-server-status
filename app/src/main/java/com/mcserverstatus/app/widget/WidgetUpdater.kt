@@ -3,6 +3,7 @@ package com.mcserverstatus.app.widget
 import android.content.Context
 import androidx.glance.appwidget.updateAll
 import com.mcserverstatus.app.data.AppDatabase
+import com.mcserverstatus.app.network.MotdFormatter
 import com.mcserverstatus.app.network.ServerPinger
 
 /**
@@ -20,10 +21,18 @@ object WidgetUpdater {
         val dao = AppDatabase.getInstance(context).serverDao()
         val favorite = dao.getFavorite()
         if (favorite != null) {
-            val nowOnline = ServerPinger.ping(favorite, timeoutMs = REFRESH_TIMEOUT_MS).success
-            if (favorite.lastKnownOnline != nowOnline) {
-                dao.update(favorite.copy(lastKnownOnline = nowOnline))
-            }
+            val result = ServerPinger.ping(favorite, timeoutMs = REFRESH_TIMEOUT_MS)
+            dao.update(
+                favorite.copy(
+                    lastKnownOnline = result.success,
+                    lastCheckedAt = System.currentTimeMillis(),
+                    lastKnownPlayersOnline = result.playersOnline,
+                    lastKnownPlayersMax = result.playersMax,
+                    lastKnownLatencyMs = result.latencyMs,
+                    lastKnownMotd = if (result.success) MotdFormatter.toPlainText(result.motd) else null,
+                    lastKnownFaviconBase64 = result.faviconBase64,
+                ),
+            )
         }
         McStatusWidget().updateAll(context)
     }
