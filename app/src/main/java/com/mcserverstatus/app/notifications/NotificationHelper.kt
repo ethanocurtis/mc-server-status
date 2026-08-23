@@ -48,6 +48,12 @@ object NotificationHelper {
             .setAutoCancel(true)
             .build()
 
-        NotificationManagerCompat.from(context).notify(entry.id.toInt(), notification)
+        // Distinct IDs per direction (not just per server) so an "offline" notification and a
+        // later "back online" one for the same server show as two separate notifications
+        // instead of the second silently overwriting the first before you ever see it. A given
+        // server can never fire the same direction twice in a row - notifyStatusChange is only
+        // ever called on an actual flip - so this can't accumulate beyond one card per direction.
+        val notificationId = (entry.id * 2 + if (nowOnline) 1 else 0).toInt()
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 }
