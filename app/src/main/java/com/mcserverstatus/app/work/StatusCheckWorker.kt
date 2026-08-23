@@ -6,11 +6,13 @@ import androidx.work.WorkerParameters
 import com.mcserverstatus.app.data.AppDatabase
 import com.mcserverstatus.app.network.ServerPinger
 import com.mcserverstatus.app.notifications.NotificationHelper
+import com.mcserverstatus.app.widget.WidgetUpdater
 
 /**
  * Periodic background check for servers the user has opted into status-change
  * notifications for. Pings each one, and if its online/offline state flipped
  * since the last check, posts a notification and persists the new state.
+ * Also refreshes the home screen widget (see [WidgetUpdater]) each cycle.
  *
  * Deliberately only touches servers with `notifyOnStatusChange = true` - this
  * is a background *notifier*, not a general background refresher; the
@@ -37,6 +39,7 @@ class StatusCheckWorker(
             }
         }
 
+        WidgetUpdater.refresh(applicationContext)
         return Result.success()
     }
 

@@ -11,4 +11,6 @@ class ServerRepository(private val dao: ServerDao) {
     suspend fun update(entry: ServerEntry) = dao.update(entry)
 
     suspend fun delete(entry: ServerEntry) = dao.delete(entry)
+
+    suspend fun setFavorite(id: Long) = dao.setFavorite(id)
 }

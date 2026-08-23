@@ -150,6 +150,13 @@ fun ServerListScreen(
                             onEdit = { dialogMode = DialogMode.Edit(state.entry) },
                             onDelete = { pendingDelete = state.entry },
                             onRefresh = { viewModel.refreshOne(state.entry) },
+                            onToggleFavorite = {
+                                if (state.entry.isFavorite) {
+                                    viewModel.unsetFavorite(state.entry)
+                                } else {
+                                    viewModel.setFavorite(state.entry)
+                                }
+                            },
                         )
                     }
                 }

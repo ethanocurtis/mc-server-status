@@ -13,3 +13,5 @@ val StatusUnknown = Color(0xFF9E9E9E)
 val LatencyGood = Color(0xFF43A047)
 val LatencyOk = Color(0xFFFB8C00)
 val LatencyBad = Color(0xFFE53935)
+
+val FavoriteStar = Color(0xFFFFB300)

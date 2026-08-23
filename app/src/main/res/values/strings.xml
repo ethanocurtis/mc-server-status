@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MC Server Status</string>
+    <string name="widget_description">Shows your favorite server\'s status</string>
 </resources>

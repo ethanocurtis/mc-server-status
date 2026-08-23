@@ -1,5 +1,6 @@
 package com.mcserverstatus.app.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.mcserverstatus.app.data.ServerRepository
 import com.mcserverstatus.app.data.SettingsRepository
 import com.mcserverstatus.app.network.ServerPinger
 import com.mcserverstatus.app.network.ServerStatusResult
+import com.mcserverstatus.app.widget.WidgetUpdater
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +34,7 @@ data class ServerUiState(
 class MainViewModel(
     private val serverRepository: ServerRepository,
     private val settingsRepository: SettingsRepository,
+    private val appContext: Context,
 ) : ViewModel() {
 
     private val pingStates = MutableStateFlow<Map<Long, PingUiState>>(emptyMap())
@@ -118,6 +121,20 @@ class MainViewModel(
         }
     }
 
+    fun setFavorite(entry: ServerEntry) {
+        viewModelScope.launch {
+            serverRepository.setFavorite(entry.id)
+            WidgetUpdater.refresh(appContext)
+        }
+    }
+
+    fun unsetFavorite(entry: ServerEntry) {
+        viewModelScope.launch {
+            serverRepository.update(entry.copy(isFavorite = false))
+            WidgetUpdater.refresh(appContext)
+        }
+    }
+
     fun setAutoRefreshEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setAutoRefreshEnabled(enabled) }
     }
@@ -131,7 +148,7 @@ class MainViewModel(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return MainViewModel(app.serverRepository, app.settingsRepository) as T
+                    return MainViewModel(app.serverRepository, app.settingsRepository, app.applicationContext) as T
                 }
             }
     }

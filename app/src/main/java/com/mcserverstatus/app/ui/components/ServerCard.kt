@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.mcserverstatus.app.data.ServerEdition
 import com.mcserverstatus.app.ui.PingUiState
 import com.mcserverstatus.app.ui.ServerUiState
+import com.mcserverstatus.app.ui.theme.FavoriteStar
 import com.mcserverstatus.app.ui.theme.LatencyBad
 import com.mcserverstatus.app.ui.theme.LatencyGood
 import com.mcserverstatus.app.ui.theme.LatencyOk
@@ -50,6 +53,7 @@ fun ServerCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ping = state.ping
@@ -124,6 +128,14 @@ fun ServerCard(
                         edition = state.entry.edition,
                     )
                 }
+            }
+
+            IconButton(onClick = onToggleFavorite) {
+                Icon(
+                    imageVector = if (state.entry.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                    contentDescription = if (state.entry.isFavorite) "Unset as widget favorite" else "Show on home screen widget",
+                    tint = if (state.entry.isFavorite) FavoriteStar else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             var menuExpanded by remember { mutableStateOf(false) }

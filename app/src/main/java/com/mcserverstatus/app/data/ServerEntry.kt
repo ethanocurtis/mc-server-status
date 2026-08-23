@@ -29,6 +29,8 @@ data class ServerEntry(
      * rather than notifying on every check. Null until the worker has checked this server once.
      */
     val lastKnownOnline: Boolean? = null,
+    /** At most one server is favorited at a time - it's the one the home screen widget shows. */
+    val isFavorite: Boolean = false,
 ) {
     /** Display name: the user's nickname if set, otherwise the host. */
     val displayName: String get() = name.ifBlank { host }
