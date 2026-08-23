@@ -24,7 +24,7 @@ object WidgetUpdater {
             val result = ServerPinger.ping(favorite, timeoutMs = REFRESH_TIMEOUT_MS)
             dao.update(
                 favorite.copy(
-                    lastKnownOnline = result.success,
+                    widgetOnline = result.success,
                     lastCheckedAt = System.currentTimeMillis(),
                     lastKnownPlayersOnline = result.playersOnline,
                     lastKnownPlayersMax = result.playersMax,

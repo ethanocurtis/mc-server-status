@@ -25,10 +25,21 @@ data class ServerEntry(
     /** Whether the background status-check worker should notify on an online/offline flip. */
     val notifyOnStatusChange: Boolean = false,
     /**
-     * Last online/offline state observed by the background worker, used to detect a *change*
-     * rather than notifying on every check. Null until the worker has checked this server once.
+     * Last *confirmed* online/offline state observed by the background worker, used to detect
+     * a change rather than notifying on every check. Null until the worker has confirmed this
+     * server's state at least once.
      */
     val lastKnownOnline: Boolean? = null,
+    /**
+     * A reading that disagreed with [lastKnownOnline] on the most recent check, but hasn't been
+     * confirmed by a second consecutive check yet - see [com.mcserverstatus.app.work.StatusCheckWorker].
+     * This debounce exists because a single failed ping is ambiguous: it's just as likely to be
+     * the *phone's* network having a bad moment (weak signal, a Wi-Fi/cellular handoff, one DNS
+     * hiccup) as the server actually going down, and firing a notification on every blip made
+     * the feature useless. Requiring the same reading twice in a row (~15-30 min apart) before
+     * treating it as real filters that out, at the cost of one extra check's worth of delay.
+     */
+    val pendingStatusChange: Boolean? = null,
     /** At most one server is favorited at a time - it's the one the home screen widget shows. */
     val isFavorite: Boolean = false,
     /**
@@ -38,6 +49,13 @@ data class ServerEntry(
      * favorite itself until it's been checked once, or whenever it's currently offline.
      */
     val lastCheckedAt: Long? = null,
+    /**
+     * Separate from [lastKnownOnline] on purpose: this is the widget's own immediate,
+     * undebounced reading. If the two shared a field, a server that's both favorited and
+     * notify-enabled would have WidgetUpdater's unconditional overwrite silently undo
+     * [pendingStatusChange]'s debounce every cycle.
+     */
+    val widgetOnline: Boolean? = null,
     val lastKnownPlayersOnline: Int? = null,
     val lastKnownPlayersMax: Int? = null,
     val lastKnownLatencyMs: Long? = null,

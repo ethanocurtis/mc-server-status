@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [ServerEntry::class], version = 5, exportSchema = false)
+@Database(entities = [ServerEntry::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun serverDao(): ServerDao
@@ -68,13 +68,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v5 -> v6: adds the one-blip-doesn't-count debounce field for status notifications,
+         * and splits the widget's own online/offline reading into its own column so the two
+         * don't fight over the same value (see [ServerEntry.widgetOnline]). */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE servers ADD COLUMN pendingStatusChange INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE servers ADD COLUMN widgetOnline INTEGER DEFAULT NULL")
+                db.execSQL("UPDATE servers SET widgetOnline = lastKnownOnline")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mc-server-status.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
+                ).addMigrations(
+                    MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                ).build().also { instance = it }
             }
         }
     }

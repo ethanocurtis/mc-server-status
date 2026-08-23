@@ -94,7 +94,7 @@ private fun WidgetContent(favorite: ServerEntry?, openAppIntent: Intent) {
             }
 
             Row(modifier = GlanceModifier.padding(top = 6.dp)) {
-                val statusText = when (favorite.lastKnownOnline) {
+                val statusText = when (favorite.widgetOnline) {
                     true -> "● Online"
                     false -> "● Offline"
                     null -> "Not checked yet"
