@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Every CI build gets a distinct version so it's actually possible to tell builds apart on
+// device (Settings > Apps > MC Server Status > App info) instead of every APK looking identical.
+val ciRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()
+
 android {
     namespace = "com.mcserverstatus.app"
     compileSdk = 35
@@ -13,8 +17,8 @@ android {
         applicationId = "com.mcserverstatus.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = ciRunNumber ?: 1
+        versionName = if (ciRunNumber != null) "1.0.$ciRunNumber" else "1.0-dev"
 
         vectorDrawables {
             useSupportLibrary = true

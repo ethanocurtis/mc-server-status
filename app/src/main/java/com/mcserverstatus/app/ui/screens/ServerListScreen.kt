@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mcserverstatus.app.data.ServerEntry
@@ -55,6 +57,12 @@ fun ServerListScreen(
     val servers by viewModel.uiState.collectAsStateWithLifecycle()
     val autoRefreshEnabled by viewModel.autoRefreshEnabled.collectAsStateWithLifecycle()
     val autoRefreshInterval by viewModel.autoRefreshIntervalSeconds.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val versionLabel = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "unknown"
+    }
 
     var dialogMode by remember { mutableStateOf<DialogMode?>(null) }
     var pendingDelete by remember { mutableStateOf<ServerEntry?>(null) }
@@ -98,6 +106,18 @@ fun ServerListScreen(
                                 onClick = { viewModel.setAutoRefreshIntervalSeconds(seconds) },
                             )
                         }
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Version $versionLabel",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            enabled = false,
+                            onClick = {},
+                        )
                     }
                 },
             )
