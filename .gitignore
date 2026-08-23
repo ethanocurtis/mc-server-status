@@ -14,3 +14,6 @@ local.properties
 *.aab
 *.jks
 *.keystore
+# The debug keystore is intentionally committed (see keystore/README.md) so every build - CI
+# or local - signs with the same key; only a real release keystore should ever be gitignored.
+!/keystore/debug.keystore

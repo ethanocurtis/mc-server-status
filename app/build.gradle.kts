@@ -25,6 +25,17 @@ android {
         }
     }
 
+    signingConfigs {
+        // Committed on purpose so every build - local or CI - signs with the same key and can
+        // therefore update in place on a device. See keystore/README.md.
+        getByName("debug") {
+            storeFile = file("../keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -36,6 +47,16 @@ android {
         }
         debug {
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    applicationVariants.all {
+        val variantVersionName = versionName
+        val variantBuildType = buildType.name
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "MCServerStatus-$variantVersionName-$variantBuildType.apk"
         }
     }
 
