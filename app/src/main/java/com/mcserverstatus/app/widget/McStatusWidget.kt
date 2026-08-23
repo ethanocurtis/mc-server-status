@@ -1,6 +1,7 @@
 package com.mcserverstatus.app.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,19 +38,20 @@ class McStatusWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val favorite = AppDatabase.getInstance(context).serverDao().getFavorite()
+        val openAppIntent = Intent(context, MainActivity::class.java)
         provideContent {
-            WidgetContent(favorite)
+            WidgetContent(favorite, openAppIntent)
         }
     }
 }
 
 @Composable
-private fun WidgetContent(favorite: ServerEntry?) {
+private fun WidgetContent(favorite: ServerEntry?, openAppIntent: Intent) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
+            .clickable(actionStartActivity(openAppIntent)),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
         if (favorite == null) {
